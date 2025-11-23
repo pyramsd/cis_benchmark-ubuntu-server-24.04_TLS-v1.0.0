@@ -149,7 +149,7 @@ echo -e "${BLUE}[*] Usuarios duplicados no existente${RESET}"
             # Mostrar el UID duplicado y los usuarios asociados en rojo
             echo -e "${RED}- Duplicate User: \"$l_user\" Users: \"$(awk -F: -v n="$l_user" '($1 == n) { print $1 }' /etc/passwd | xargs)\"${RESET}"
         fi
-    done < <(cut -f3 -d":" /etc/group | sort -n | uniq -c)
+    done < <(cut -f1 -d":" /etc/passwd | sort | uniq -c)
 
     # Verificar si hubo duplicados
     if [ "$has_duplicates" -eq 0 ]; then
@@ -177,9 +177,9 @@ echo -e "${BLUE}[*] Grupos duplicado no existente${RESET}"
             # Marcar que se encontraron duplicados
             has_duplicates=1
             # Mostrar el UID duplicado y los usuarios asociados en rojo
-            echo -e "${RED}- Duplicate Group: \"$l_user\" Groups: \"$(awk -F: -v n="$l_group" '($1 == n) { print $1 }' /etc/group | xargs)\"${RESET}"
+            echo -e "${RED}- Duplicate Group: \"$l_group\" Groups: \"$(awk -F: -v n="$l_group" '($1 == n) { print $1 }' /etc/group | xargs)\"${RESET}"
         fi
-    done < <(cut -f3 -d":" /etc/group | sort -n | uniq -c)
+    done < <(cut -f1 -d":" /etc/group | sort | uniq -c)
 
     # Verificar si hubo duplicados
     if [ "$has_duplicates" -eq 0 ]; then

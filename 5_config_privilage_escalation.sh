@@ -58,7 +58,7 @@ if [[ $exit_code -eq 1 ]]; then
         counter=$((counter + 1))
 else
         echo -e "${PINK}[-] La reautenticacion de privilegios esta desactivada globalmente\n$output"
-        echo "[PRIVILEGE] REATENTICACION: Desactivada globalmente" >> "$LOG_FILE"
+        echo "[PRIVILEGE] REAUTENTICACION: Desactivada globalmente" >> "$LOG_FILE"
 fi
 
 echo -e "\n"

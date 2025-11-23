@@ -85,6 +85,7 @@ if [ -z "$l_output2" ]; then
   counter=$((counter + 1))
 else
   echo -e "${PINK}[-] Reasons for audit failure:\n$l_output2${RESET}"
+  echo -e "[ROOT_ACCOUNT] PATH: Fallos de integridad de la ruta root:$l_output2" >> "$LOG_FILE"
 fi
 
 echo -e "\n"
@@ -97,7 +98,7 @@ if [[ $exit_code -ne 0 ]]; then
         echo -e "${GREEN}[+] Usuario root umask correctamente configurado"
         counter=$((counter + 1))
 else
-        ecjo -e "${PINK}[-] Usuario root umask incorrectamente configurado\n -> $output"
+        echo -e "${PINK}[-] Usuario root umask incorrectamente configurado\n -> $output"
         echo "[ROOT_ACCOUNT] UMASK: Mal configurado" >> "$LOG_FILE"
 fi
 
