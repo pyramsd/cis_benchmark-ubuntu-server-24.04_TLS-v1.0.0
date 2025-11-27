@@ -287,6 +287,7 @@ aplicar_solucion() {
         "PRIVILEGE:SUDO")
             echo "Abriendo /etc/sudoers con visudo..."
             visudo
+            echo "Edición completada."
             ;;
         *)
             echo "Sin acción específica para este tipo/subtipo."
