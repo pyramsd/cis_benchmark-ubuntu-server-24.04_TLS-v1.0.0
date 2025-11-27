@@ -104,7 +104,7 @@ else
         echo -e "${GREEN}[+] Configuración correcta: su está restringido al grupo '$group' y el grupo está vacío${RESET}"
         counter=$((counter + 1))
     else
-        echo -e "${PINK}[-] El grupo '$group' tiene usuarios: $users${RESET}"
+        echo -e "${PINK}[-] El grupo '$group' tiene usuarios: $users. No debe tener grupo.${RESET}"
         echo "[PRIVILEGE] SU: el $group no esta vacio" >> "$LOG_FILE"
     fi
 fi
