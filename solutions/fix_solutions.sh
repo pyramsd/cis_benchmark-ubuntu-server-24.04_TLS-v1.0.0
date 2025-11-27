@@ -37,6 +37,16 @@ declare -A nombres_legibles=(
     ["PRIVILEGE"]="Escalado de privilegios"
     ["ROOT_ACCOUNT"]="Cuenta root"
     ["GROUP"]="Grupos de usuario"
+    ["CIPHERS"]="Cifrados SSH"
+    ["DUPLICATE_GROUPS"]="Grupos duplicados"
+    ["DUPLICATE_GUIDs"]="GIDs duplicados"
+    ["DUPLICATE_NAMES"]="Nombres de usuario duplicados"
+    ["DUPLICATE_UIDs"]="UIDs duplicados"
+    ["FILE"]="Archivos del sistema"
+    ["GROUP_SHADOW"]="Grupo Shadow"
+    ["MTA_CONFIG"]="Configuración MTA"
+    ["PASSWD"]="Fichero Passwd"
+    ["SHADOW"]="Fichero Shadow"
 )
 
 # ====== Funciones de solución ======
@@ -166,6 +176,81 @@ mostrar_solucion() {
                 echo -e "   - DenyGroups <lista de grupos>"
             fi
             ;;
+        ("CIPHERS:SSH")
+            echo -e "Revisar la configuración de cifrados en /etc/ssh/sshd_config. Se recomiendan algoritmos modernos y seguros."
+            echo -e "Evitar el uso de cifrados débiles o desactualizados como los basados en CBC."
+            ;;
+        ("DUPLICATE_GROUPS")
+            echo -e "Existen nombres de grupo duplicados en /etc/group. Cada nombre de grupo debe ser único."
+            echo -e "Use 'awk -F: '(\$1 duplicates[\$1]++) {print \$1}' /etc/group' para encontrarlos y edítelos manualmente."
+            ;;
+        ("DUPLICATE_GUIDs")
+            echo -e "Existen GIDs (Group IDs) duplicados en /etc/group. Cada GID debe ser único."
+            echo -e "Use 'awk -F: '(\$3 duplicates[\$3]++) {print \$3}' /etc/group' para encontrarlos y 'groupmod -g <new_gid> <group_name>' para corregirlos."
+            ;;
+        ("DUPLICATE_NAMES")
+            echo -e "Existen nombres de usuario duplicados en /etc/passwd. Cada nombre debe ser único."
+            echo -e "Use 'awk -F: '(\$1 duplicates[\$1]++) {print \$1}' /etc/passwd' para encontrarlos y 'usermod -l <new_name> <old_name>' para renombrar."
+            ;;
+        ("DUPLICATE_UIDs")
+            echo -e "Existen UIDs (User IDs) duplicados en /etc/passwd. Cada UID debe ser único."
+            echo -e "Use 'awk -F: '(\$3 duplicates[\$3]++) {print \$3}' /etc/passwd' para encontrarlos y 'usermod -u <new_uid> <user_name>' para corregirlos."
+            ;;
+        ("FILE:File_System")
+            echo -e "Faltan archivos importantes del sistema. Revise el log para ver cuáles son y reinstale el paquete correspondiente."
+            ;;
+        ("FILE_PERMISSION:File_System")
+            echo -e "Se han detectado permisos incorrectos en archivos/directorios del sistema. Revise el log para detalles."
+            echo -e "Use 'chmod' y 'chown' para restaurar los permisos recomendados."
+            ;;
+        ("GROUP")
+            echo -e "Se han detectado usuarios en /etc/passwd que pertenecen a un GID que no existe en /etc/group."
+            echo -e "Identifique los usuarios y asígneles un grupo válido editando /etc/passwd."
+            ;;
+        ("GROUP_SHADOW")
+            echo -e "El grupo 'shadow' no debería tener miembros. Remueva cualquier usuario de este grupo editando /etc/group."
+            ;;
+        ("MTA_CONFIG")
+            echo -e "La configuración del Mail Transfer Agent (MTA) no es segura."
+            echo -e "Asegúrese de que el MTA esté configurado para escuchar solo en la interfaz de localhost (127.0.0.1)."
+            ;;
+        ("PASSWD")
+            echo -e "Se han encontrado cuentas en /etc/passwd que no usan contraseñas ocultas (shadowed passwords)."
+            echo -e "Use el comando 'pwconv' para migrar las contraseñas a /etc/shadow."
+            ;;
+        ("PRIVILEGE:REAUTENTICACION")
+            echo -e "La reautenticación para sudo está desactivada globalmente ('!authenticate')."
+            echo -e "Elimine la directiva '!authenticate' del fichero /etc/sudoers (usando 'visudo')."
+            ;;
+        ("PRIVILEGE:SU")
+            echo -e "El acceso al comando 'su' no está restringido."
+            echo -e "Se recomienda restringir 'su' a un grupo (ej. 'wheel') usando 'pam_wheel.so' en /etc/pam.d/su."
+            ;;
+        ("PRIVILEGE:SUDO")
+            echo -e "Tiempo de espera de autenticación sudo configurado incorrectamente o no configurado."
+            echo -e "Revisar las directivas en /etc/sudoers (con 'visudo')"
+            echo -e "Ejmemplo:\ncomando: sudo visudo\nAñadir:\nDefaults    env_reset, timestamp_timeout=15 o <15"
+            ;;
+        ("PRIVILEGE:USER")
+            echo -e "Se han detectado usuarios con la directiva 'NOPASSWD' en la configuración de sudo."
+            echo -e "Elimine la etiqueta 'NOPASSWD' de las reglas de sudo para requerir siempre una contraseña."
+            ;;
+        ("ROOT_ACCOUNT:PATH")
+            echo -e "La variable de entorno PATH del usuario root es insegura."
+            echo -e "Corrija el PATH en los archivos de inicio de root (ej. .bashrc, .profile) para eliminar directorios como '.'."
+            ;;
+        ("ROOT_ACCOUNT:ROOT")
+            echo -e "La configuración de la cuenta root (UID/GID) es incorrecta. El UID y GID de root deben ser 0 y únicos."
+            echo -e "Revise /etc/passwd y /etc/group."
+            ;;
+        ("ROOT_ACCOUNT:UMASK")
+            echo -e "El 'umask' por defecto para el usuario root no es seguro (debería ser 027 o más restrictivo)."
+            echo -e "Configure el 'umask' en los archivos de inicio de root como /etc/profile o /root/.bashrc."
+            ;;
+        ("SHADOW" | "SHADOW:")
+            echo -e "Se han detectado cuentas en /etc/shadow sin contraseña."
+            echo -e "Use 'passwd <user>' para asignar una contraseña o 'passwd -l <user>' para bloquear la cuenta."
+            ;;
         (*)
             echo -e "No hay una solución específica registrada para este subtipo."
             ;;
@@ -198,6 +283,10 @@ aplicar_solucion() {
             if [[ ! -f "$sudo_log_file" ]]; then
                 echo "Defaults        logfile=\"/var/log/sudo.log\"" >> /etc/sudoers 
             fi
+            ;;
+        "PRIVILEGE:SUDO")
+            echo "Abriendo /etc/sudoers con visudo..."
+            visudo
             ;;
         *)
             echo "Sin acción específica para este tipo/subtipo."

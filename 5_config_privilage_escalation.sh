@@ -66,17 +66,15 @@ echo -e "\n"
 echo -e "${BLUE}[*] Tiempo de espera de autenticación sudo configurado correctamente${RESET}"
 output=$(grep -roP "timestamp_timeout=\K[0-9]*" /etc/sudoers*)
 if [[ -n $output ]]; then
-        echo -e "${GREEN}[+] TimeStamp configurado:\n$output\nEl valor no tiene que ser tan alto"
+        echo -e "${GREEN}[+] TimeStamp configurado:\n$output\n"
         counter=$((counter + 1))
 else
         output=$(sudo -V | grep -i "Authentication timestamp timeout:")
         if [[ -n $output ]]; then
-                echo -e "${PINK}[!] No TimeSttamp configurado. Por defecto es 15 minutos"
+                echo -e "${PINK}[!] No TimeSttamp configurado. El valor no tiene que ser más de 15 minutos"
                 echo -e "${YELLOW}[!] Para corregir:"
                 echo -e "Editar el archivo sudoers -> sudo visudo"
-                echo -e 'Añadir estas lineas:\nDefaults\tenv_reset, timestamp_timeout=15'
-                echo -e 'Defaults\ttimestamp_timeout=15'
-                echo -e 'Defaults\tenv_reset'
+                echo -e 'Añadir estas lineas:\nDefaults\tenv_reset, timestamp_timeout=15 o <15'
                 echo "[PRIVILEGE] SUDO: Tiempo de autenticacion sudo no configurado" >> "$LOG_FILE"
         else
                 echo -e "${GREEN}[+] TimeSttamp configurado:\n$output\n. Por defecto es 15 minutos"
