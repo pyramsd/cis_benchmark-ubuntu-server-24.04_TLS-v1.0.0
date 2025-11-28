@@ -64,9 +64,9 @@ fi
 echo -e "\n"
 
 echo -e "${BLUE}[*] Tiempo de espera de autenticación sudo configurado correctamente${RESET}"
-output=$(grep -roP "timestamp_timeout=\K[0-9]*" /etc/sudoers*)
+output=$(grep -roP "timestamp_timeout=\K[0-9]*" /etc/sudoers)
 if [[ -n $output ]]; then
-        echo -e "${GREEN}[+] TimeStamp configurado:\n$output\n"
+        echo -e "${GREEN}[+] TimeStamp configurado:\n-> timestamp_timeout=$output\n"
         counter=$((counter + 1))
 else
         output=$(sudo -V | grep -i "Authentication timestamp timeout:")
