@@ -3,7 +3,7 @@
 echo "Sigue la estandarización de: cis_benchmark-ubuntu-server-24.04_TLS-v1.0.0"
 
 source "$(dirname "$0")/constantes/Colores.sh"
-source "$(dirname "$0")/functions/porcentaje_seguridad.sh"
+source "$(dirname "$0")/functions/generate_report.sh"
 
 if [ "$(id -u)" -ne 0 ]; then
     echo "Permiso denegado $0" >&2
@@ -12,19 +12,22 @@ fi
 
 print_help() {
     cat <<'EOF'
-Usage: ./cis-audit [-h | --help] [--fix-configs] [--allowed-programs=<path>]
+Usage: ./cis-audit [-h | --help] [--fix-configs] [--allowed-programs=<path>] [--gen-report]
 
 Opciones:
   -h, --help                        Muestra esta ayuda.
-  --fix-configs                     Corrige las malas configuraciones.
+  --fix-configs                     Corrige las malas configuraciones de forma interactiva.
   --allowed-programs=<path_file>    Lee archivo de programas permitidos.
+  --gen-report                      Genera un reporte de auditoría en formato Markdown.
 EOF
 }
 
 FIX_CONFIGS=false
+GEN_REPORT=false
 
-PARSED=$(getopt -o h --long help,fix-configs,allowed-programs: -- "$@")
+PARSED=$(getopt -o h --long help,fix-configs,allowed-programs:,gen-report -- "$@")
 if [ $? -ne 0 ]; then
+    print_help
     exit 2
 fi
 eval set -- "$PARSED"
@@ -44,6 +47,10 @@ while true; do
             ALLOWED_PROGRAMS_FILE="$2"
             shift 2
             ;;
+        (--gen-report)
+            GEN_REPORT=true
+            shift
+            ;;
         (--)
             shift   # quitar el separador "--"
             break   # salir del bucle de opciones
@@ -59,49 +66,36 @@ done
 LOG_DIR="$(dirname "$0")/logs"
 mkdir -p "$LOG_DIR"
 ERROR_LOG="$LOG_DIR/errors.log"
+# Limpia el log de errores al inicio de cada ejecución para no arrastrar resultados antiguos.
 : > "$ERROR_LOG"
 
-# Redirigir todos los errores de los scripts fuente a errors.log
-exec 2> >(tee -a "$ERROR_LOG" >&2)
+# Redirigir todos los errores (stderr) de los scripts a un log, y también a la pantalla.
+exec 2> >(tee -a "$ERROR_LOG")
 
-# Services - Configure Server and Clients Services
+# --- Ejecución de los Scripts de Auditoría ---
 source 1_config_server_clients_services.sh
-
-echo -e "\n"
-
-# Job Schedulers - Configure Cron
+echo ""
 source 2_config_cron_permissions.sh
-
-echo -e "\n"
-
-# Host Based Firewall - Configure firewall
+echo ""
 source 3_config_firewall.sh
-
-echo -e "\n"
-
-# Access Control - Configure SSH Server
+echo ""
 source 4_config_ssh_server.sh
-
-echo -e "\n"
-
-# Access Control - Configure privilige escalation
+echo ""
 source 5_config_privilage_escalation.sh
-
-echo -e "\n"
-
-# Configure root and system accounts and environmen
+echo ""
 source 6_config_root_system_envs_accounts.sh
-
-echo -e "\n"
-
-# System Maintenance - Local User and Group Settings
+echo ""
 source 7_config_usersgroups_local.sh
-
-echo -e "\n"
-
-# System Maintenance - System file permission
+echo ""
 source 8_config_system_file_permissions.sh
 
-echo $counter
-resultado=$(calcular_porcentaje "$counter")
-echo "Porcentaje de seguridad: $resultado"
+# Restaurar el descriptor de archivo de error estándar
+exec 2>&1
+
+echo "Los errores de configuración se guardarán en $ERROR_LOG"
+
+# --- Generación del Reporte (si se solicitó) ---
+if [ "$GEN_REPORT" = true ]; then
+    echo "Generando reporte de auditoría..."
+    generate_classified_report
+fi
