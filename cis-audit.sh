@@ -15,9 +15,9 @@ print_help() {
 Usage: ./cis-audit [-h | --help] [--allowed-programs=<path>]
 
 Opciones:
-  -h, --help                Muestra esta ayuda.
-  --fix-configs             Corrige las malas configuraciones.
-  --allowed-programs        Lee archivo de programas permitidos.
+  -h, --help                        Muestra esta ayuda.
+  --fix-configs                     Corrige las malas configuraciones.
+  --allowed-programs=<path_file>    Lee archivo de programas permitidos.
 EOF
 }
 
