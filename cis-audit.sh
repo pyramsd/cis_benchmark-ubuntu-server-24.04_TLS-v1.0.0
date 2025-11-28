@@ -12,7 +12,7 @@ fi
 
 print_help() {
     cat <<'EOF'
-Usage: ./cis-audit [-h | --help] [--allowed-programs=<path>]
+Usage: ./cis-audit [-h | --help] [--fix-configs] [--allowed-programs=<path>]
 
 Opciones:
   -h, --help                        Muestra esta ayuda.
